@@ -13,6 +13,8 @@ var io = require('socket.io')(server)
 var waiters_name = new Array()
 var waiters_id = new Array()
 var rooms = ["1", "2", "3", "4", "5"]
+var cards = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
+var nums = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '+', '-', '*', '/']
 
 io.sockets.on('connection', (socket) => {
   console.log('Socket connected : ' + socket.id)
