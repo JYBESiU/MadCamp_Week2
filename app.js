@@ -36,8 +36,8 @@ var UserAccount = require('./models/account');
 var router = require('./routes')(app, UserAccount);
 
 // [RUN SERVER]
-var server = app.listen(80, function(){
- console.log("Express server has started on port " + 80)
+var server = app.listen(443, function(){
+ console.log("Express server has started on port " + 443)
 });
 
 
