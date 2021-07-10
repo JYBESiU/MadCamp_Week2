@@ -8,17 +8,63 @@ var server = http.createServer(app)
 
 var io = require('socket.io')(server)
 
-io.sockets.on('connection', (socket) => {
-  console.log('Socket connected : ${socket.id}')
-  socket.on('clientMessage', (data) => {
-    console.log('Client Message : ' + data)
+var waiters_name = new Array()
+var waiters_id = new Array()
+var rooms = ["1", "2", "3", "4", "5"]
 
-    var message = {
-      msg: 'server',
-      data: 'data'
-    }
-    socket.emit('serverMessage', message)
+io.sockets.on('connection', (socket) => {
+  console.log('Socket connected : ' + socket.id)
+
+  socket.on('waitBattle', (data) => {
+    var waiter = data
+    console.log('Im ' + waiter + 'waiting for battle')
+
+    waiters_name.push(waiter)
+    waiters_id.push(socket.id)
   })
+
+  socket.on('battle', (data) => {
+    var battleData = JSON.parse(data)
+    var ask = battleData.ask
+    var accept = battleData.accept
+
+    console.log(ask + 'make battle to ' + accept)
+
+    if (waiters_name.includes(accept)) {
+      var pos = waiters_name.indexOf(accept)
+      socket.to(waiters_id[pos]).emit("challengeCome", ask, accept)
+    }
+  })
+
+  socket.on('acceptGame', (ask, accept) => {
+    var ask = ask
+    var accept = accept
+    var pos_ask = waiters_name.indexOf(ask)
+    var pos_accept = waiters_name.indexOf(accept)
+
+    socket.join(ask + "&" + accept)
+
+    socket.to(waiters_id[pos_ask]).emit('startGame', ask, accept)
+    // socket.to(waiters_id[pos_accept]).emit('startGame', ask, accept)
+
+    console.log('Start game !' + ask + " and " + accept)
+
+    waiters_id = waiters_id.splice(pos_ask, 1)
+    waiters_id = waiters_id.splice(pos_accept, 1)
+    waiters_name = waiters_name.splice(pos_ask, 1)
+    waiters_name = waiters_name.splice(pos_accept, 1)
+  })
+
+  socket.on('disconnect', (data) => {
+    console.log('Socket disconnect : ' + socket.id)
+
+    if (waiters_id.includes(socket.id)) {
+      var pos = waiters_id.indexOf(socket.id)
+      waiters_name = waiters_name.splice(pos, 1)
+      waiters_id = waiters_id.splice(pos, 1)
+    }
+  })
+
 })
 
 server.listen(443, () => {
