@@ -5,7 +5,10 @@ module.exports = function(app, UserAccount){
     userAccount.name = req.body.name;
     userAccount.id = req.body.id;
     userAccount.password = req.body.password;
-    userAccount.online = "false";
+    userAccount.online = "false"
+    userAccount.imgnumber ="1"
+    userAccount.win = 0
+    userAccount.lose =0
 
     const query = { id: userAccount.id }//뉴 유저의
 
@@ -64,4 +67,74 @@ module.exports = function(app, UserAccount){
       }
     })
   })
+
+  app.post('/userinfo', (req, res)=>{
+    const query = { id: req.body.id }//뉴 유저의
+
+    UserAccount.findOne(query, (err, result) =>{
+      if(result!=null){
+        return res.status(200).send(JSON.stringify(result))//스트링으로 바꿔 보냄.
+      }
+      if(err){
+        return res.status(404).send()
+      }
+    })
+  })
+
+  app.post('/change', (req, res)=>{
+    const query = { id: req.body.id }//뉴 유저의
+
+    UserAccount.findOne(query, (err, result) =>{
+      if(result!=null){
+        result.name = req.body.name
+        result.password = req.body.password
+        result.imgnumber = req.body.imgnumber
+
+        result.save((err)=>{
+          if(err) return res.status(404).send();
+          console.log("saved")
+          return res.status(200).send()
+        })
+      }
+      if(err){
+        return res.status(404).send()
+      }
+    })
+  })
+
+  app.post('/logout', (req, res)=>{
+    const query = { id: req.body.id }//뉴 유저의
+
+    UserAccount.findOne(query, (err, result) =>{
+      if(result!=null){
+        result.online = "false"
+        result.save((err)=>{
+          if(err) return res.status(404).send();
+          console.log("logout")
+          return res.status(200).send()
+        })
+      }
+      if(err){
+        return res.status(404).send()
+      }
+    })
+  })
+
+  app.post('/rank', (req, res)=>{
+    UserAccount.find({}, (err, result)=>{
+      if(err){
+        console.log("에러")
+        return res.status(404).send();
+      }
+      if(!result){
+        console.log("없음")
+        return res.status(404).send();
+      }
+      else{
+        console.log(result)
+        res.status(200).send(JSON.stringify(result))//스트링으로 바꿔 보냄.
+      }
+  })
+})
+
 }
