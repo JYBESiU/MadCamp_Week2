@@ -51,6 +51,8 @@ io.sockets.on('connection', (socket) => {
       var pos = waiters_name.indexOf(accept)
       socket.to(waiters_id[pos]).emit("challengeCome", ask, accept)
     }
+
+    socket.join(ask + "&" + accept)
   })
 
   socket.on('acceptGame', (ask, accept) => {
@@ -59,12 +61,13 @@ io.sockets.on('connection', (socket) => {
     var pos_ask = waiters_name.indexOf(ask)
     var pos_accept = waiters_name.indexOf(accept)
 
-    socket.to(waiters_id[pos_ask]).emit('startGame', ask, accept)
+    // socket.to(waiters_id[pos_ask]).emit('startGame', ask, accept)
 
     socket.join(ask + "&" + accept)
     rooms.push(ask + "&" + accept)
-    console.log(rooms[0]+"=",socket.rooms)
-    io.to(ask + "&" + accept).emit('enterroom', ask + "&" + accept, cards_order.shuffle(), nums_order.shuffle())
+    console.log(rooms[0] + "=", socket.rooms)
+    io.to(ask + "&" + accept).emit('startGame', ask, accept)
+    // io.to(ask + "&" + accept).emit('enterroom', ask + "&" + accept, cards_order.shuffle(), nums_order.shuffle())
 
     // socket.to(waiters_id[pos_accept]).emit('startGame', ask, accept)
 
@@ -84,14 +87,9 @@ io.sockets.on('connection', (socket) => {
     }
   })
 
-  socket.on('disconnect', (data) => {
-    console.log('Socket disconnect : ' + socket.id)
-
-    if (waiters_id.includes(socket.id)) {
-      var pos = waiters_id.indexOf(socket.id)
-      waiters_name.splice(pos, 1)
-      waiters_id.splice(pos, 1)
-    }
+  socket.on('turnOver', (selects) => {
+    var selects = selects
+    console.log(selects)
   })
 
   socket.on('leave', (ask, accept, data)=>{
@@ -103,6 +101,16 @@ io.sockets.on('connection', (socket) => {
     waiters_name.push(waiter)
     waiters_id.push(socket.id)
     console.log(waiters_name, waiters_id)
+  })
+
+  socket.on('disconnect', (data) => {
+    console.log('Socket disconnect : ' + socket.id)
+
+    if (waiters_id.includes(socket.id)) {
+      var pos = waiters_id.indexOf(socket.id)
+      waiters_name.splice(pos, 1)
+      waiters_id.splice(pos, 1)
+    }
   })
 
 })
