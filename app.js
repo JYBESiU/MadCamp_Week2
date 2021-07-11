@@ -12,9 +12,13 @@ var io = require('socket.io')(server)
 
 var waiters_name = new Array()
 var waiters_id = new Array()
-var rooms = ["1", "2", "3", "4", "5"]
+var rooms = []
 var cards_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 var nums_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+var cards = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
+var nums = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '+', '-', '*', '/']
+var nums_num = nums.slice(0, 12)
+var nums_op = nums.slice(-4)
 
 Array.prototype.shuffle = function () {
     var length = this.length;
@@ -28,6 +32,12 @@ Array.prototype.shuffle = function () {
 
     return this;
 };
+
+function makeTarget() {
+  nums_num.shuffle()
+  nums_op.shuffle()
+  return nums_num[0] + nums_op[0] + nums_num[1]
+}
 
 io.sockets.on('connection', (socket) => {
   console.log('Socket connected : ' + socket.id)
@@ -66,8 +76,23 @@ io.sockets.on('connection', (socket) => {
     socket.join(ask + "&" + accept)
     rooms.push(ask + "&" + accept)
     console.log(rooms[0] + "=", socket.rooms)
-    io.to(ask + "&" + accept).emit('startGame', ask, accept)
-    // io.to(ask + "&" + accept).emit('enterroom', ask + "&" + accept, cards_order.shuffle(), nums_order.shuffle())
+    io.to(ask + "&" + accept).emit('startGame', ask, accept, cards_order.shuffle(), nums_order.shuffle())
+
+    setTimeout(() => {
+      io.to(ask + "&" + accept).emit('startShow')
+      setTimeout(() => {
+        io.to(ask + "&" + accept).emit('stopShow')
+        setTimeout(() => {
+          var target = makeTarget()
+          // while (target != parseInt(target)) {
+          //   target = makeTarget()
+          // }
+          console.log("target: " + target)
+          console.log("target eval: " + eval(target))
+          io.to(ask + "&" + accept).emit('startRound', target, eval(target))
+        }, 1000)
+      }, 10000)
+    }, 3000)
 
     // socket.to(waiters_id[pos_accept]).emit('startGame', ask, accept)
 
@@ -87,9 +112,43 @@ io.sockets.on('connection', (socket) => {
     }
   })
 
-  socket.on('turnOver', (selects) => {
-    var selects = selects
-    console.log(selects)
+  socket.on('click', (room, position) => {
+    var room = room
+    var position = position
+    console.log(room + "   " + position)
+
+    io.to(room).emit('opponentClick', position)
+  })
+
+  socket.on('turnOver', (one, two, three, targetString, targetNum, id, ask, accept, ask_scr, accept_scr) => {
+    var room = ask + "&" + accept
+    var one = one
+    var two = two
+    var three = three
+    var targetNum = targetNum
+
+    var exp = nums[one] + nums[two] + nums[three]
+    console.log(exp)
+    if (nums_op.includes(nums[one]) || nums_op.includes(nums[three])) {
+      console.log("NOT VALID!")
+      io.to(room).emit('wrong')
+    } else {
+      var ans = eval(exp)
+      console.log(targetString)
+      console.log(targetNum)
+
+      if (ans == targetNum) {
+        console.log("CORRECT!")
+        io.to(room).emit('correct')
+      } else {
+        console.log("WRONG!")
+        io.to(room).emit('wrong')
+      }
+    }
+  })
+
+  socket.on('endRound', () => {
+
   })
 
   socket.on('leave', (ask, accept, data)=>{
