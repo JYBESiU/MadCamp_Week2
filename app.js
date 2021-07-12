@@ -85,14 +85,14 @@ io.sockets.on('connection', (socket) => {
         io.to(ask + "&" + accept).emit('stopShow')
         setTimeout(() => {
           var target = makeTarget()
-          // while (target != parseInt(target)) {
-          //   target = makeTarget()
-          // }
+          while (eval(target) != parseInt(eval(target))) {
+            target = makeTarget()
+          }
           console.log("target: " + target)
           console.log("target eval: " + eval(target))
-          io.to(ask + "&" + accept).emit('startRound', target, eval(target))
+          io.to(ask + "&" + accept).emit('startRound', target, eval(target), 0, 0)
         }, 1000)
-      }, 10000)
+      }, 10000) // 보여주는 시
     }, 3000)
 
     // socket.to(waiters_id[pos_accept]).emit('startGame', ask, accept)
@@ -114,12 +114,12 @@ io.sockets.on('connection', (socket) => {
 
   })
 
-  socket.on('click', (room, position) => {
+  socket.on('click', (room, position, size, clicker) => {
     var room = room
     var position = position
     console.log(room + "   " + position)
 
-    io.to(room).emit('opponentClick', position)
+    io.to(room).emit('opponentClick', position, size, clicker)
   })
 
   socket.on('turnOver', (one, two, three, targetString, targetNum, id, ask, accept, ask_scr, accept_scr) => {
@@ -141,7 +141,11 @@ io.sockets.on('connection', (socket) => {
 
       if (ans == targetNum) {
         console.log("CORRECT!")
-        io.to(room).emit('correct')
+        if (id == ask) {
+          io.to(room).emit('correct', ask_scr + 1, accept_scr)
+        } else if (id == accept) {
+          io.to(room).emit('correct', ask_scr, accept_scr + 1)
+        }
       } else {
         console.log("WRONG!")
         io.to(room).emit('wrong')
@@ -149,8 +153,15 @@ io.sockets.on('connection', (socket) => {
     }
   })
 
-  socket.on('endRound', () => {
+  socket.on('endRound', (room, ask_scr, accept_scr) => {
+    var ask_scr = ask_scr
+    var accept_scr = accept_scr
 
+    var target = makeTarget()
+    while (eval(target) != parseInt(eval(target))) {
+      target = makeTarget()
+    }
+    io.to(room).emit('startRound', target, eval(target), ask_scr, accept_scr)
   })
 
   socket.on('leave', (ask, accept, data)=>{
