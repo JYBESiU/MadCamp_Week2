@@ -1,11 +1,60 @@
-module.exports = function(app, UserAccount){
+module.exports = function(app, UserAccount, Battle){
+
+  app.post('/signupkakao', (req, res)=>{
+    var userAccount = new UserAccount();
+    userAccount.name = req.body.name;
+    userAccount.id = req.body.id;
+    userAccount.password = "kakaologin";
+    userAccount.online = "true"
+    userAccount.imgnumber =req.body.imgnumber
+    userAccount.win = 0
+    userAccount.lose =0
+
+    const query = { id: userAccount.id }//뉴 유저의
+
+    UserAccount.findOne(query, (err, result) => {//이메일 있는지
+        if (result == null) {//디비에
+          userAccount.save(function(err){
+            if(err){
+              console.error(err);
+              return res.status(400).send();
+            }
+            console.error("newer");
+            return res.status(200).send()
+            })
+        }
+        else if(result){
+          result.online="true"
+          result.save((err)=>{
+            if(err){
+              console.error(err);
+              return res.status(400).send();
+            }
+            console.error("로그인");
+
+            res.status(200).send()
+          })
+          console.error("있음");
+          return res.status(200).send()
+        }
+        else if(err){
+          console.error(err);
+          return res.status(400).send();
+
+        }
+    })
+
+  })
 
   app.post('/signup', (req, res)=>{
     var userAccount = new UserAccount();
     userAccount.name = req.body.name;
     userAccount.id = req.body.id;
     userAccount.password = req.body.password;
-    userAccount.online = "false";
+    userAccount.online = "false"
+    userAccount.imgnumber ="1"
+    userAccount.win = 0
+    userAccount.lose =0
 
     const query = { id: userAccount.id }//뉴 유저의
 
@@ -49,7 +98,7 @@ module.exports = function(app, UserAccount){
   })
 
   app.post('/online', (req, res)=>{
-    UserAccount.find({online: "true"}, (err, result)=>{
+    UserAccount.find({$or:[{online : "true"}, {online:"playing"}]}, (err, result)=>{
       if(err){
         console.log("에러")
         return res.status(404).send();
@@ -64,4 +113,126 @@ module.exports = function(app, UserAccount){
       }
     })
   })
+
+  app.post('/userinfo', (req, res)=>{
+    const query = { id: req.body.id }//뉴 유저의
+
+    UserAccount.findOne(query, (err, result) =>{
+      if(result!=null){
+        return res.status(200).send(JSON.stringify(result))//스트링으로 바꿔 보냄.
+      }
+      if(err){
+        return res.status(404).send()
+      }
+    })
+  })
+
+  app.post('/change', (req, res)=>{
+    const query = { id: req.body.id }//뉴 유저의
+
+    UserAccount.findOne(query, (err, result) =>{
+      if(result!=null){
+        result.name = req.body.name
+        result.password = req.body.password
+        result.imgnumber = req.body.imgnumber
+
+        result.save((err)=>{
+          if(err) return res.status(404).send();
+          console.log("saved")
+          return res.status(200).send()
+        })
+      }
+      if(err){
+        return res.status(404).send()
+      }
+    })
+  })
+
+  app.post('/logout', (req, res)=>{
+    const query = { id: req.body.id }//뉴 유저의
+
+    UserAccount.findOne(query, (err, result) =>{
+      if(result!=null){
+        result.online = "false"
+        result.save((err)=>{
+          if(err) return res.status(404).send();
+          console.log("logout")
+          return res.status(200).send()
+        })
+      }
+      if(err){
+        return res.status(404).send()
+      }
+    })
+  })
+
+  app.post('/rank', (req, res)=>{
+    UserAccount.find({}, (err, result)=>{
+      if(err){
+        console.log("에러")
+        return res.status(404).send();
+      }
+      if(!result){
+        console.log("없음")
+        return res.status(404).send();
+      }
+      else{
+        console.log(result)
+        res.status(200).send(JSON.stringify(result))//스트링으로 바꿔 보냄.
+      }
+    })
+  })
+
+  app.post('/getbattle', (req, res)=>{
+    var id = req.body.id
+
+    Battle.find({$or:[{ask : id}, {accept:id}]}, (err, result)=>{
+      if(result){
+        console.log(result)
+        return res.status(200).send(JSON.stringify(result))//스트링으로 바꿔 보냄.
+      }
+      else if(err){
+        if(err) return res.status(404).send();
+
+      }
+    })
+  })
+
+  app.post('/changeplay', (req,res)=>{
+    const query = { id: req.body.id }//뉴 유저의
+
+    UserAccount.findOne(query, (err, result) =>{
+      if(result!=null){
+        result.online = "playing"
+        result.save((err)=>{
+          if(err) return res.status(404).send();
+          console.log("playing"+req.body.id)
+          return res.status(200).send()
+        })
+      }
+      if(err){
+        return res.status(404).send()
+      }
+    })
+  })
+
+  app.post('/changeonline', (req,res)=>{
+    const query = { id: req.body.id }//뉴 유저의
+
+    UserAccount.findOne(query, (err, result) =>{
+      if(result!=null){
+        result.online = "true"
+        result.save((err)=>{
+          if(err) return res.status(404).send();
+          console.log("true"+req.body.id)
+          return res.status(200).send()
+        })
+      }
+      if(err){
+        return res.status(404).send()
+      }
+    })
+  })
+
+
 }
