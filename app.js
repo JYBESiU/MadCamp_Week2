@@ -169,9 +169,24 @@ io.sockets.on('connection', (socket) => {
 
     if (waiters_id.includes(socket.id)) {
       var pos = waiters_id.indexOf(socket.id)
+
+      var id = waiters_name[pos]
+      UserAccount.findOne({id: id}, (err, result) =>{
+        if(result){
+          result.online = "false"
+          result.save((error)=>{
+            if (error) console.log("failed logout")
+            else console.log("logout done")
+          })
+        }
+        else if(err) console.log("can't find data")
+      })
+
+
       waiters_name.splice(pos, 1)
       waiters_id.splice(pos, 1)
     }
+
   })
 
   socket.on('leave', (ask, accept, data)=>{

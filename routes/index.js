@@ -143,6 +143,8 @@ app.post('/makebattle', (req, res)=>{
   battle.accept = res.body.accept
   battle.winner = "winner"
   battle.loser = "loser"
+  battle.ask_scr =0
+  battle.accept=0
 
   battle.save((err)=>{
     if(err) return res.status(404).send();

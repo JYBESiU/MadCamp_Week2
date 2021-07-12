@@ -5,6 +5,8 @@ var battleSchema = new Schema({
   ask: String,
   accept: String,
   winner: String,
+  ask_scr: Number,
+  accept_scr: Number,
   loser: String
 })
 
