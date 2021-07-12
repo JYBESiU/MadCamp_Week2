@@ -13,6 +13,8 @@ var io = require('socket.io')(server)
 var waiters_name = new Array()
 var waiters_id = new Array()
 var rooms = []
+var pass = []
+var push = []
 var cards_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 var nums_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 var cards = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
@@ -76,6 +78,9 @@ io.sockets.on('connection', (socket) => {
 
     socket.join(ask + "&" + accept)
     rooms.push(ask + "&" + accept)
+    pass.push(0)
+    push.push(0)
+
     console.log(rooms[0] + "=", socket.rooms)
     io.to(ask + "&" + accept).emit('startGame', ask, accept, cards_order.shuffle(), nums_order.shuffle())
 
@@ -88,8 +93,6 @@ io.sockets.on('connection', (socket) => {
           while (eval(target) != parseInt(eval(target))) {
             target = makeTarget()
           }
-          console.log("target: " + target)
-          console.log("target eval: " + eval(target))
           io.to(ask + "&" + accept).emit('startRound', target, eval(target), 0, 0)
         }, 1000)
       }, 10000) // 보여주는 시
@@ -122,7 +125,36 @@ io.sockets.on('connection', (socket) => {
     io.to(room).emit('opponentClick', position, size, clicker)
   })
 
-  socket.on('turnOver', (one, two, three, targetString, targetNum, id, ask, accept, ask_scr, accept_scr) => {
+
+  socket.on('startTurn', (room, id) => {
+    var pos = rooms.indexOf(room)
+    if (push[pos] == 0) {
+      push[pos] = 1
+      socket.broadcast.to(room).emit('opponentTurn', id)
+    }
+
+  })
+
+  socket.on('passTurn', (room, ask_scr, accept_scr) => {
+    console.log("pass")
+    var pos = rooms.indexOf(room)
+    pass[pos] += 1
+
+    if (pass[pos] == 2) {
+      pass[pos] = 0
+      push[pos] = 0
+      var ask_scr = ask_scr
+      var accept_scr = accept_scr
+
+      var target = makeTarget()
+      while (eval(target) != parseInt(eval(target))) {
+        target = makeTarget()
+      }
+      io.to(room).emit('startRound', target, eval(target), ask_scr, accept_scr)
+    }
+  })
+
+  socket.on('endTurn', (one, two, three, targetString, targetNum, id, ask, accept, ask_scr, accept_scr) => {
     var room = ask + "&" + accept
     var one = one
     var two = two
@@ -132,13 +164,12 @@ io.sockets.on('connection', (socket) => {
     var exp = nums[one] + nums[two] + nums[three]
     console.log(exp)
     if (nums_op.includes(nums[one]) || nums_op.includes(nums[three])) {
+      var pos = rooms.indexOf(room)
+      push[pos] = 0
       console.log("NOT VALID!")
       io.to(room).emit('wrong')
     } else {
       var ans = eval(exp)
-      console.log(targetString)
-      console.log(targetNum)
-
       if (ans == targetNum) {
         console.log("CORRECT!")
         if (id == ask) {
@@ -147,22 +178,35 @@ io.sockets.on('connection', (socket) => {
           io.to(room).emit('correct', ask_scr, accept_scr + 1)
         }
       } else {
+        var pos = rooms.indexOf(room)
+        push[pos] = 0
         console.log("WRONG!")
         io.to(room).emit('wrong')
       }
     }
   })
 
-  socket.on('endRound', (room, ask_scr, accept_scr) => {
+
+  socket.on('endRound', (room, ask, accept, ask_scr, accept_scr) => {
     var ask_scr = ask_scr
     var accept_scr = accept_scr
+
+    if (ask_scr == 7) {
+      // ask
+    } else if (accept_scr == 7) {
+      // accept
+    }
 
     var target = makeTarget()
     while (eval(target) != parseInt(eval(target))) {
       target = makeTarget()
     }
+    var pos = rooms.indexOf(room)
+    pass[pos] = 0
+    push[pos] = 0
     io.to(room).emit('startRound', target, eval(target), ask_scr, accept_scr)
   })
+
 
   socket.on('leave', (ask, accept, data)=>{
     var ask = ask
@@ -193,24 +237,9 @@ io.sockets.on('connection', (socket) => {
         else if(err) console.log("can't find data")
       })
 
-
       waiters_name.splice(pos, 1)
       waiters_id.splice(pos, 1)
     }
-
-  })
-
-  socket.on('leave', (ask, accept, data)=>{
-    var ask = ask
-    var accept = accept
-    var waiter = data
-    socket.leave(ask + "&" + accept)
-    console.log(socket.rooms)
-    waiters_name.push(waiter)
-    waiters_id.push(socket.id)
-    console.log(waiters_name, waiters_id)
-
-
   })
 
 })
