@@ -77,6 +77,21 @@ io.sockets.on('connection', (socket) => {
     socket.join(ask + "&" + accept)
     rooms.push(ask + "&" + accept)
     console.log(rooms[0] + "=", socket.rooms)
+
+    var battle = new Battle()
+    battle.ask = ask
+    battle.accept = accept
+    battle.winner = ""
+    battle.loser = ""
+    battle.ask_scr =0
+    battle.accept_scr=0
+
+    battle.save((err)=>{
+      if(err) console.log("battleDB fail");
+      console.log("made battle")
+    })
+
+
     io.to(ask + "&" + accept).emit('startGame', ask, accept, cards_order.shuffle(), nums_order.shuffle())
 
     setTimeout(() => {
@@ -113,6 +128,7 @@ io.sockets.on('connection', (socket) => {
     }
 
   })
+
 
   socket.on('click', (room, position) => {
     var room = room
@@ -201,7 +217,6 @@ io.sockets.on('connection', (socket) => {
 
 
   })
-
 })
 
 server.listen(443, () => {
