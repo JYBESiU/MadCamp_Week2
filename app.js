@@ -191,20 +191,31 @@ io.sockets.on('connection', (socket) => {
     var ask_scr = ask_scr
     var accept_scr = accept_scr
 
-    if (ask_scr == 7) {
-      // ask
-    } else if (accept_scr == 7) {
-      // accept
-    }
+    var pos_ask = waiters_name.indexOf(ask)
+    var pos_accept = waiters_name.indexOf(accept)
+    var id_ask = waiters_id[pos_ask]
+    var id_accept = waiters_id[pos_accept]
 
-    var target = makeTarget()
-    while (eval(target) != parseInt(eval(target))) {
-      target = makeTarget()
+    if (ask_scr == 7) {
+      io.to(id_ask).emit('win')
+      io.to(id_accept).emit('lose')
+      // update winner,
+
+    } else if (accept_scr == 7) {
+      io.to(id_ask).emit('lose')
+      io.to(id_accept).emit('win')
+      // update winner,
+
+    } else {
+      var target = makeTarget()
+      while (eval(target) != parseInt(eval(target))) {
+        target = makeTarget()
+      }
+      var pos = rooms.indexOf(room)
+      pass[pos] = 0
+      push[pos] = 0
+      io.to(room).emit('startRound', target, eval(target), ask_scr, accept_scr)
     }
-    var pos = rooms.indexOf(room)
-    pass[pos] = 0
-    push[pos] = 0
-    io.to(room).emit('startRound', target, eval(target), ask_scr, accept_scr)
   })
 
 
