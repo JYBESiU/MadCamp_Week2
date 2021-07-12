@@ -210,5 +210,7 @@ mongoose.connect(url+'/myDb', {
 })
 
 var UserAccount = require('./models/account');
+var Battle = require('./models/battle');
 
-var router = require('./routes')(app, UserAccount);
+
+var router = require('./routes')(app, UserAccount, Battle);

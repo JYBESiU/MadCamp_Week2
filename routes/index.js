@@ -1,4 +1,4 @@
-module.exports = function(app, UserAccount){
+module.exports = function(app, UserAccount, Battle){
 
   app.post('/signup', (req, res)=>{
     var userAccount = new UserAccount();
@@ -134,6 +134,20 @@ module.exports = function(app, UserAccount){
         console.log(result)
         res.status(200).send(JSON.stringify(result))//스트링으로 바꿔 보냄.
       }
+  })
+})
+
+app.post('/makebattle', (req, res)=>{
+  var battle = new Battle()
+  battle.ask = res.body.ask
+  battle.accept = res.body.accept
+  battle.winner = "winner"
+  battle.loser = "loser"
+
+  battle.save((err)=>{
+    if(err) return res.status(404).send();
+    console.log("made battle")
+    return res.status(200).send()
   })
 })
 
