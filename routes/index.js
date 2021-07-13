@@ -234,5 +234,4 @@ module.exports = function(app, UserAccount, Battle){
     })
   })
 
-
 }

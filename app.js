@@ -13,7 +13,8 @@ var io = require('socket.io')(server)
 var waiters_name = new Array()
 var waiters_id = new Array()
 var rooms = []
-
+var pass = []
+var push = []
 var cards_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 var nums_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 var cards = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
@@ -73,11 +74,13 @@ io.sockets.on('connection', (socket) => {
     var pos_ask = waiters_name.indexOf(ask)
     var pos_accept = waiters_name.indexOf(accept)
 
-    socket.to(waiters_id[pos_ask]).emit('startGame', ask, accept)
+    // socket.to(waiters_id[pos_ask]).emit('startGame', ask, accept)
 
     socket.join(ask + "&" + accept)
-
     rooms.push(ask + "&" + accept)
+    pass.push(0)
+    push.push(0)
+
     console.log(rooms[0] + "=", socket.rooms)
 
     var battle = new Battle()
@@ -102,15 +105,12 @@ io.sockets.on('connection', (socket) => {
         io.to(ask + "&" + accept).emit('stopShow')
         setTimeout(() => {
           var target = makeTarget()
-
           while (eval(target) != parseInt(eval(target))) {
             target = makeTarget()
           }
-          console.log("target: " + target)
-          console.log("target eval: " + eval(target))
           io.to(ask + "&" + accept).emit('startRound', target, eval(target), 0, 0)
         }, 1000)
-      }, 10000)
+      }, 10000) // 보여주는 시
     }, 3000)
 
     // socket.to(waiters_id[pos_accept]).emit('startGame', ask, accept)
@@ -131,7 +131,8 @@ io.sockets.on('connection', (socket) => {
     }
 
   })
-  socket.on('click', (room, position) => {
+
+  socket.on('click', (room, position, size, clicker) => {
     var room = room
     var position = position
     console.log(room + "   " + position)
@@ -139,7 +140,36 @@ io.sockets.on('connection', (socket) => {
     io.to(room).emit('opponentClick', position, size, clicker)
   })
 
-  socket.on('turnOver', (one, two, three, targetString, targetNum, id, ask, accept, ask_scr, accept_scr) => {
+
+  socket.on('startTurn', (room, id) => {
+    var pos = rooms.indexOf(room)
+    if (push[pos] == 0) {
+      push[pos] = 1
+      socket.broadcast.to(room).emit('opponentTurn', id)
+    }
+
+  })
+
+  socket.on('passTurn', (room, ask_scr, accept_scr) => {
+    console.log("pass")
+    var pos = rooms.indexOf(room)
+    pass[pos] += 1
+
+    if (pass[pos] == 2) {
+      pass[pos] = 0
+      push[pos] = 0
+      var ask_scr = ask_scr
+      var accept_scr = accept_scr
+
+      var target = makeTarget()
+      while (eval(target) != parseInt(eval(target))) {
+        target = makeTarget()
+      }
+      io.to(room).emit('startRound', target, eval(target), ask_scr, accept_scr)
+    }
+  })
+
+  socket.on('endTurn', (one, two, three, targetString, targetNum, id, ask, accept, ask_scr, accept_scr) => {
     var room = ask + "&" + accept
     var one = one
     var two = two
@@ -149,17 +179,22 @@ io.sockets.on('connection', (socket) => {
     var exp = nums[one] + nums[two] + nums[three]
     console.log(exp)
     if (nums_op.includes(nums[one]) || nums_op.includes(nums[three])) {
+      var pos = rooms.indexOf(room)
+      push[pos] = 0
       console.log("NOT VALID!")
       io.to(room).emit('wrong')
     } else {
       var ans = eval(exp)
-      console.log(targetString)
-      console.log(targetNum)
-
       if (ans == targetNum) {
         console.log("CORRECT!")
-        io.to(room).emit('correct')
+        if (id == ask) {
+          io.to(room).emit('correct', ask_scr + 1, accept_scr)
+        } else if (id == accept) {
+          io.to(room).emit('correct', ask_scr, accept_scr + 1)
+        }
       } else {
+        var pos = rooms.indexOf(room)
+        push[pos] = 0
         console.log("WRONG!")
         io.to(room).emit('wrong')
       }
@@ -167,15 +202,35 @@ io.sockets.on('connection', (socket) => {
   })
 
 
-  socket.on('endRound', (room, ask_scr, accept_scr) => {
+  socket.on('endRound', (room, ask, accept, ask_scr, accept_scr) => {
     var ask_scr = ask_scr
     var accept_scr = accept_scr
 
-    var target = makeTarget()
-    while (eval(target) != parseInt(eval(target))) {
-      target = makeTarget()
+    var pos_ask = waiters_name.indexOf(ask)
+    var pos_accept = waiters_name.indexOf(accept)
+    var id_ask = waiters_id[pos_ask]
+    var id_accept = waiters_id[pos_accept]
+
+    if (ask_scr == 7) {
+      io.to(id_ask).emit('win')
+      io.to(id_accept).emit('lose')
+      // update winner,
+
+    } else if (accept_scr == 7) {
+      io.to(id_ask).emit('lose')
+      io.to(id_accept).emit('win')
+      // update winner,
+
+    } else {
+      var target = makeTarget()
+      while (eval(target) != parseInt(eval(target))) {
+        target = makeTarget()
+      }
+      var pos = rooms.indexOf(room)
+      pass[pos] = 0
+      push[pos] = 0
+      io.to(room).emit('startRound', target, eval(target), ask_scr, accept_scr)
     }
-    io.to(room).emit('startRound', target, eval(target), ask_scr, accept_scr)
   })
 
 
@@ -195,32 +250,26 @@ io.sockets.on('connection', (socket) => {
 
     if (waiters_id.includes(socket.id)) {
       var pos = waiters_id.indexOf(socket.id)
+
+      var id = waiters_name[pos]
+      UserAccount.findOne({id: id}, (err, result) =>{
+        if(result){
+          result.online = "false"
+          result.save((error)=>{
+            if (error) console.log("failed logout")
+            else console.log("logout done")
+          })
+        }
+        else if(err) console.log("can't find data")
+      })
+
       waiters_name.splice(pos, 1)
       waiters_id.splice(pos, 1)
-      if (waiters_id.includes(socket.id)) {
-        var pos = waiters_id.indexOf(socket.id)
-
-        var id = waiters_name[pos]
-        UserAccount.findOne({id: id}, (err, result) =>{
-          if(result){
-            result.online = "false"
-            result.save((error)=>{
-              if (error) console.log("failed logout")
-              else console.log("logout done")
-            })
-          }
-          else if(err) console.log("can't find data")
-        })
-
-
-        waiters_name.splice(pos, 1)
-        waiters_id.splice(pos, 1)
-      }
-    })
+    }
   })
 })
 
-server.listen(80, () => {
+server.listen(443, () => {
   console.log('Server Listening...')
 })
 
@@ -243,26 +292,5 @@ mongoose.connect(url+'/myDb', {
 var UserAccount = require('./models/account');
 var Battle = require('./models/battle');
 
-
-// UserAccount.find({online : "false"}, (err, result)=>{
-//   if(result){
-//     console.log(result)
-//   }
-//   if(err){
-//
-//   }
-// })
-// for(var i=0;i<UserAccount.find({online : "true"}).length();i++){
-//   UserAccount.find()[i].name = "false"
-//   UserAccount.find()[i].save((err)=>{
-//     if(err){
-//       return console.log("에러")
-//     }
-//     else{
-//       console.log("성공")
-//     }
-//
-//   })
-// }
 
 var router = require('./routes')(app, UserAccount, Battle);
