@@ -270,6 +270,21 @@ module.exports = function(app, UserAccount, Battle){
       })
     }
 
+    if(result==""){
+      UserAccount.findOne({id:id}, (err, result)=>{
+        if(result){
+          result.online="true"
+
+          result.save((err)=>{
+            if(err) return res.status(404).send()
+            return res.status(200).send()
+          })
+        }
+        if(err) return res.status(404).send()
+        if(!result) return res.status(400).send()
+      })
+    }
+
     })
 
 }

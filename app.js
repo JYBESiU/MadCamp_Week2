@@ -57,22 +57,27 @@ io.sockets.on('connection', (socket) => {
     var battleData = JSON.parse(data)
     var ask = battleData.ask
     var accept = battleData.accept
+    var ask_name = battleData.name
+    var accept_name = battleData.accept_name
 
     console.log(ask + 'make battle to ' + accept)
 
     if (waiters_name.includes(accept)) {
       var pos = waiters_name.indexOf(accept)
-      socket.to(waiters_id[pos]).emit("challengeCome", ask, accept)
+      socket.to(waiters_id[pos]).emit("challengeCome", ask, accept, ask_name)
     }
 
     socket.join(ask + "&" + accept)
   })
 
-  socket.on('acceptGame', (ask, accept) => {
+  socket.on('acceptGame', (ask, accept, ask_name, accept_name) => {
     var ask = ask
     var accept = accept
     var pos_ask = waiters_name.indexOf(ask)
     var pos_accept = waiters_name.indexOf(accept)
+
+    var ask_name = ask_name
+    var accept_name = accept_name
 
     // socket.to(waiters_id[pos_ask]).emit('startGame', ask, accept)
 
@@ -89,22 +94,10 @@ io.sockets.on('connection', (socket) => {
       if(err) return console.log("error")
       cnt = count
     })
-    var battle = new Battle()
-    battle.battleid = cnt
-    battle.ask = ask
-    battle.accept = accept
-    battle.winner = ""
-    battle.loser = ""
-    battle.ask_scr =0
-    battle.accept_scr=0
-
-    battle.save((err)=>{
-      if(err) console.log("battleDB fail");
-      console.log("made battle")
-    })
 
 
-    io.to(ask + "&" + accept).emit('startGame', ask, accept, cards_order.shuffle(), nums_order.shuffle(), cnt)
+
+    io.to(ask + "&" + accept).emit('startGame', ask, accept, cards_order.shuffle(), nums_order.shuffle(), cnt, ask_name, accept_name)
 
     setTimeout(() => {
       io.to(ask + "&" + accept).emit('startShow')
@@ -205,7 +198,7 @@ io.sockets.on('connection', (socket) => {
   })
 
 
-  socket.on('endRound', (room, ask, accept, ask_scr, accept_scr, battleid) => {
+  socket.on('endRound', (room, ask, accept, ask_scr, accept_scr, battleid, ask_name, accept_name, stop) => {
     var ask_scr = ask_scr
     var accept_scr = accept_scr
 
@@ -214,49 +207,60 @@ io.sockets.on('connection', (socket) => {
     var id_ask = waiters_id[pos_ask]
     var id_accept = waiters_id[pos_accept]
 
+    var ask_name = ask_name
+    var accept_name = accept_name
 
-    if (ask_scr == 5) {
+    var stop = stop
+
+    if(stop=="stop"){
+      io.to(id_ask).emit('stop')
+      io.to(id_accept).emit('stop')
+      console.log("stop")
+    }
+
+
+    if (ask_scr == 1) {
       io.to(id_ask).emit('win')
       io.to(id_accept).emit('lose')
       console.log("askwin")
       // update winner,
       //battleid 필요
 
-      Battle.findOne({battleid:battleid}, (err, result) =>{
-        if(result){
-          result.winner=ask
-          result.loser=accept
-          result.ask_scr= ask_scr
-          result.accept_scr=accept_scr
+      var battle = new Battle()
+      battle.battleid = battleid
+      battle.ask = ask
+      battle.accept = accept
+      battle.winner=ask_name
+      battle.loser=accept_name
+      battle.ask_scr= ask_scr
+      battle.accept_scr=accept_scr
 
-          result.save((error)=>{
-            if (error) console.log("failed")
-            else console.log("battle done")
-          })
-        }
-        else if(err) console.log("can't find data")
+      battle.save((err)=>{
+        if(err) console.log("battleDB fail");
+        console.log("made battle")
       })
 
-    } else if (accept_scr == 5) {
+
+    } else if (accept_scr == 1) {
       io.to(id_ask).emit('lose')
       io.to(id_accept).emit('win')
       console.log("losewin")
 
-      // update winner,
-      Battle.findOne({battleid:battleid}, (err, result) =>{
-        if(result){
-          result.winner=accept
-          result.loser=ask
-          result.ask_scr= ask_scr
-          result.accept_scr=accept_scr
+      var battle = new Battle()
+      battle.battleid = battleid
+      battle.ask = ask
+      battle.accept = accept
+      battle.winner=accept_name
+      battle.loser=ask_name
+      battle.ask_scr= ask_scr
+      battle.accept_scr=accept_scr
 
-          result.save((error)=>{
-            if (error) console.log("failed")
-            else console.log("battle done")
-          })
-        }
-        else if(err) console.log("can't find data")
+      battle.save((err)=>{
+        if(err) console.log("battleDB fail");
+        console.log("made battle")
       })
+      // update winner,
+
 
     } else {
       var target = makeTarget()
