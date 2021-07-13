@@ -132,6 +132,11 @@ io.sockets.on('connection', (socket) => {
 
   })
 
+  socket.on('challengeReject', (ask, accept) => {
+    var room = ask + "&" + accept
+    socket.broadcast.to(room).emit("yourRejected")
+  })
+
   socket.on('click', (room, position, size, clicker) => {
     var room = room
     var position = position
@@ -150,10 +155,14 @@ io.sockets.on('connection', (socket) => {
 
   })
 
-  socket.on('passTurn', (room, ask_scr, accept_scr) => {
+  socket.on('passTurn', (room, id, ask, accept, ask_scr, accept_scr) => {
     console.log("pass")
     var pos = rooms.indexOf(room)
     pass[pos] += 1
+
+    if (pass[pos] == 1) {
+      socket.broadcast.to(room).emit('opponentPass', id, ask, accept)
+    }
 
     if (pass[pos] == 2) {
       pass[pos] = 0
@@ -211,12 +220,12 @@ io.sockets.on('connection', (socket) => {
     var id_ask = waiters_id[pos_ask]
     var id_accept = waiters_id[pos_accept]
 
-    if (ask_scr == 7) {
+    if (ask_scr == 5) {
       io.to(id_ask).emit('win')
       io.to(id_accept).emit('lose')
       // update winner,
 
-    } else if (accept_scr == 7) {
+    } else if (accept_scr == 5) {
       io.to(id_ask).emit('lose')
       io.to(id_accept).emit('win')
       // update winner,
