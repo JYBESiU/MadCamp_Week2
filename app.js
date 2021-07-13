@@ -171,7 +171,7 @@ io.sockets.on('connection', (socket) => {
     }
   })
 
-  socket.on('endTurn', (one, two, three, targetString, targetNum, id, ask, accept, ask_scr, accept_scr) => {
+  socket.on('endTurn', (one, two, three, targetString, targetNum, id, ask, accept, ask_scr, accept_scr, passFlag) => {
     var room = ask + "&" + accept
     var one = one
     var two = two
@@ -184,7 +184,17 @@ io.sockets.on('connection', (socket) => {
       var pos = rooms.indexOf(room)
       push[pos] = 0
       console.log("NOT VALID!")
-      io.to(room).emit('wrong')
+
+      if(passFlag){
+        var target = makeTarget()
+        while (eval(target) != parseInt(eval(target))) {
+          target = makeTarget()
+        }
+        io.to(room).emit('startRound', target, eval(target), ask_scr , accept_scr)
+      }else{
+        io.to(room).emit('wrong')
+      }
+
     } else {
       var ans = eval(exp)
       if (ans == targetNum) {
@@ -198,13 +208,22 @@ io.sockets.on('connection', (socket) => {
         var pos = rooms.indexOf(room)
         push[pos] = 0
         console.log("WRONG!")
-        io.to(room).emit('wrong')
+
+        if(passFlag){
+          var target = makeTarget()
+          while (eval(target) != parseInt(eval(target))) {
+            target = makeTarget()
+          }
+          io.to(room).emit('startRound', target, eval(target), ask_scr , accept_scr)
+        }else{
+          io.to(room).emit('wrong')
+        }
       }
     }
   })
 
 
-  socket.on('endRound', (room, ask, accept, ask_scr, accept_scr, battleid, ask_name, accept_name, stop, passFlag) => {
+  socket.on('endRound', (room, ask, accept, ask_scr, accept_scr, battleid, ask_name, accept_name, stopflag) => {
     var ask_scr = ask_scr
     var accept_scr = accept_scr
 
@@ -216,16 +235,10 @@ io.sockets.on('connection', (socket) => {
     var ask_name = ask_name
     var accept_name = accept_name
 
-    var stop = stop
-
-    if(stop=="stop"){
-      io.to(id_ask).emit('stop')
-      io.to(id_accept).emit('stop')
-      console.log("stop")
-    }
+    var stop = stopflag
 
 
-    if (ask_scr == 1) {
+    if (ask_scr == 5) {
       io.to(id_ask).emit('win')
       io.to(id_accept).emit('lose')
       console.log("askwin")
@@ -247,7 +260,7 @@ io.sockets.on('connection', (socket) => {
       })
 
 
-    } else if (accept_scr == 1) {
+    } else if (accept_scr == 5) {
       io.to(id_ask).emit('lose')
       io.to(id_accept).emit('win')
       console.log("losewin")
@@ -269,14 +282,21 @@ io.sockets.on('connection', (socket) => {
 
 
     } else {
-      var target = makeTarget()
-      while (eval(target) != parseInt(eval(target))) {
-        target = makeTarget()
-      }
+
       var pos = rooms.indexOf(room)
       pass[pos] = 0
       push[pos] = 0
-      io.to(room).emit('startRound', target, eval(target), ask_scr, accept_scr)
+      if(stop==1){
+        io.to(room).emit('stop')
+        console.log("stop")
+      } else {
+        var target = makeTarget()
+        while (eval(target) != parseInt(eval(target))) {
+          target = makeTarget()
+        }
+        io.to(room).emit('startRound', target, eval(target), ask_scr, accept_scr)
+      }
+
     }
   })
 
