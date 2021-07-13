@@ -204,7 +204,7 @@ io.sockets.on('connection', (socket) => {
   })
 
 
-  socket.on('endRound', (room, ask, accept, ask_scr, accept_scr, battleid, ask_name, accept_name, stop) => {
+  socket.on('endRound', (room, ask, accept, ask_scr, accept_scr, battleid, ask_name, accept_name, stop, passFlag) => {
     var ask_scr = ask_scr
     var accept_scr = accept_scr
 
