@@ -126,9 +126,15 @@ io.sockets.on('connection', (socket) => {
 
   })
 
-  socket.on('challengeReject', (ask, accept) => {
-    var room = ask + "&" + accept
-    socket.broadcast.to(room).emit("yourRejected")
+  socket.on('challengeReject', (id, ask, accept) => {
+    if (id == ask) {
+      var pos = waiters_name.indexOf(accept)
+      socket.to(waiters_id[pos]).emit("yourRejected")
+
+    } else if (id = accept) {
+      var pos = waiters_name.indexOf(ask)
+      socket.to(waiters_id[pos]).emit("yourRejected")
+    }
   })
 
   socket.on('click', (room, position, size, clicker) => {
