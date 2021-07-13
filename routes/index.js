@@ -219,19 +219,57 @@ module.exports = function(app, UserAccount, Battle){
   app.post('/changeonline', (req,res)=>{
     const query = { id: req.body.id }//뉴 유저의
 
+    UserAccount.update(query, {online : "true"});
+
     UserAccount.findOne(query, (err, result) =>{
-      if(result!=null){
-        result.online = "true"
-        result.save((err)=>{
-          if(err) return res.status(404).send();
-          console.log("true"+req.body.id)
-          return res.status(200).send()
-        })
+      if(result.online = "true"){
+        console.log("true"+req.body.id)
+        return res.status(200).send()
       }
-      if(err){
+      if (err){
         return res.status(404).send()
       }
     })
   })
+
+  app.post('/winLose', (req,res)=>{
+    var id = req.body.id
+    var result = req.body.result
+
+    if(result=="win"){
+      UserAccount.findOne({id:id}, (err, result)=>{
+        if(result){
+          var prev = result.win
+          result.win = prev+1
+          result.online="true"
+
+          result.save((err)=>{
+            if(err) return res.status(404).send()
+            return res.status(200).send()
+          })
+        }
+        if(err) return res.status(404).send()
+        if(!result) return res.status(400).send()
+      })
+    }
+
+    if(result=="lose"){
+      UserAccount.findOne({id:id}, (err, result)=>{
+        if(result){
+          var prev = result.lose
+          result.lose = prev+1
+          result.online="true"
+
+          result.save((err)=>{
+            if(err) return res.status(404).send()
+            return res.status(200).send()
+          })
+        }
+        if(err) return res.status(404).send()
+        if(!result) return res.status(400).send()
+      })
+    }
+
+    })
 
 }

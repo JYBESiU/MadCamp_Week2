@@ -2,6 +2,7 @@ var mongoose = require('mongoose')
 var Schema = mongoose.Schema
 
 var battleSchema = new Schema({
+  battleid: Number,
   ask: String,
   accept: String,
   winner: String,

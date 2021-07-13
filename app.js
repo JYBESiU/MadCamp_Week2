@@ -82,8 +82,15 @@ io.sockets.on('connection', (socket) => {
     push.push(0)
 
     console.log(rooms[0] + "=", socket.rooms)
+    console.log(Battle.count())
 
+    var cnt =0;
+    Battle.count({}, (err, count) =>{
+      if(err) return console.log("error")
+      cnt = count
+    })
     var battle = new Battle()
+    battle.battleid = cnt
     battle.ask = ask
     battle.accept = accept
     battle.winner = ""
@@ -97,7 +104,7 @@ io.sockets.on('connection', (socket) => {
     })
 
 
-    io.to(ask + "&" + accept).emit('startGame', ask, accept, cards_order.shuffle(), nums_order.shuffle())
+    io.to(ask + "&" + accept).emit('startGame', ask, accept, cards_order.shuffle(), nums_order.shuffle(), cnt)
 
     setTimeout(() => {
       io.to(ask + "&" + accept).emit('startShow')
@@ -116,19 +123,6 @@ io.sockets.on('connection', (socket) => {
     // socket.to(waiters_id[pos_accept]).emit('startGame', ask, accept)
 
     console.log('Start game !' + ask + " and " + accept)
-
-    if(pos_ask<pos_accept){
-      waiters_id.splice(pos_accept, 1)
-      waiters_name.splice(pos_accept, 1)
-      waiters_id.splice(pos_ask, 1)
-      waiters_name.splice(pos_ask, 1)
-    }
-    else{
-      waiters_id.splice(pos_ask, 1)
-      waiters_name.splice(pos_ask, 1)
-      waiters_id.splice(pos_accept, 1)
-      waiters_name.splice(pos_accept, 1)
-    }
 
   })
 
@@ -202,7 +196,7 @@ io.sockets.on('connection', (socket) => {
   })
 
 
-  socket.on('endRound', (room, ask, accept, ask_scr, accept_scr) => {
+  socket.on('endRound', (room, ask, accept, ask_scr, accept_scr, battleid) => {
     var ask_scr = ask_scr
     var accept_scr = accept_scr
 
@@ -211,15 +205,49 @@ io.sockets.on('connection', (socket) => {
     var id_ask = waiters_id[pos_ask]
     var id_accept = waiters_id[pos_accept]
 
-    if (ask_scr == 7) {
+    if (ask_scr == 1) {
       io.to(id_ask).emit('win')
       io.to(id_accept).emit('lose')
+      console.log("askwin")
       // update winner,
+      //battleid 필요
 
-    } else if (accept_scr == 7) {
+      Battle.findOne({battleid:battleid}, (err, result) =>{
+        if(result){
+          result.winner=ask
+          result.loser=accept
+          result.ask_scr= ask_scr
+          result.accept_scr=accept_scr
+
+          result.save((error)=>{
+            if (error) console.log("failed")
+            else console.log("battle done")
+          })
+        }
+        else if(err) console.log("can't find data")
+      })
+
+
+    } else if (accept_scr == 1) {
       io.to(id_ask).emit('lose')
       io.to(id_accept).emit('win')
+      console.log("losewin")
+
       // update winner,
+      Battle.findOne({battleid:battleid}, (err, result) =>{
+        if(result){
+          result.winner=accept
+          result.loser=ask
+          result.ask_scr= ask_scr
+          result.accept_scr=accept_scr
+
+          result.save((error)=>{
+            if (error) console.log("failed")
+            else console.log("battle done")
+          })
+        }
+        else if(err) console.log("can't find data")
+      })
 
     } else {
       var target = makeTarget()
@@ -240,9 +268,14 @@ io.sockets.on('connection', (socket) => {
     var waiter = data
     socket.leave(ask + "&" + accept)
     console.log(socket.rooms)
-    waiters_name.push(waiter)
-    waiters_id.push(socket.id)
+
     console.log(waiters_name, waiters_id)
+  })
+
+  socket.on('sendEmoji', (room, data)=>{
+    console.log('got Emoji')
+
+    socket.broadcast.to(room).emit('emoji', data)
   })
 
   socket.on('disconnect', (data) => {
