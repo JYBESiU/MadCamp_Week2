@@ -13,6 +13,7 @@
 ## Main
 
 + Online 탭
++ + sdasd
 + Ranking 탭
 + Profile 탭
 
