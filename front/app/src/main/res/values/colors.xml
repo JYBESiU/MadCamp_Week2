@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#850f11</color>
+    <color name="colorPrimaryDark">#460b0d</color>
+    <color name="colorAccent">#d08085</color>
+    <color name="white">#FFFFFF</color>
+    <color name="whitegray">#fbf9f0</color>
+    <color name="buttoncolor">#c3b194</color>
+    <color name="lightred">#640A14</color>
+    <color name="brown">#764f28</color>
+    <color name="buzzerred">#CD0505</color>
+    <color name="buzzertrans">#4DCD0505</color>
+    <color name="buzzerno">#8C8C8C</color>
+    <color name="passtrans">#4D79D97C</color>
+    <color name="passon">#79D97C</color>
+    <color name="pannel">#500700</color>
+    <color name="online">#B379D97C</color>
+    <color name="playing">#B32659B1</color>
+    <color name="black">#000000</color>
+</resources>

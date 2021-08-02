@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">TheKAIST</string>
+    <string name="title_home">Online</string>
+
+    <string name="title_dashboard">Ranking</string>
+    <string name="title_notifications">Profile</string>
+
+</resources>
