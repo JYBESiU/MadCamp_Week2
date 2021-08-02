@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:background="@color/colorPrimaryDark">
+
+    <ImageView
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="100dp"
+        android:src="@drawable/mainlogo"
+        android:id="@+id/logo" />
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="4dp"
+        app:cardElevation="8dp"
+        android:layout_marginHorizontal="5dp"
+        app:cardBackgroundColor="@color/buttoncolor"
+        android:layout_centerHorizontal="true"
+        android:layout_alignBottom="@id/signup_card"
+        android:layout_marginBottom="50dp">
+
+        <Button
+            android:layout_width="240dp"
+            android:layout_height="40dp"
+            android:text="Log in"
+            android:id="@+id/login"
+            android:layout_centerHorizontal="true"
+            android:layout_above="@+id/signup"
+            android:background="@color/buttoncolor"
+            android:textStyle="bold"/>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/signup_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="4dp"
+        android:layout_marginTop="40sp"
+        app:cardElevation="8dp"
+        android:layout_marginHorizontal="5dp"
+        app:cardBackgroundColor="@color/buttoncolor"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginVertical="150dp">
+
+        <Button
+            android:layout_width="240dp"
+            android:layout_height="40dp"
+            android:text="Sign up"
+            android:id="@+id/signup"
+            android:layout_centerHorizontal="true"
+            android:background="@color/buttoncolor"
+            android:textStyle="bold" />
+    </androidx.cardview.widget.CardView>
+
+    <com.kakao.usermgmt.LoginButton
+        android:layout_width="240dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/kakao_login"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="85dp"
+        android:layout_alignParentBottom="true"/>
+
+
+
+
+</RelativeLayout>
