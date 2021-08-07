@@ -50,4 +50,9 @@
 ## Implementation
 + MongoDB를 이용해 userAccount와 battle 두 개의 schema를 만들어 이용했다. 가입된 userAccount에서는 사용자의 id, 이름, 비밀번호, 프로필 이미지, 이긴 횟수, 진 횟수, 게임 진행 여부를 저장한다. battle에서는 게임아이디, 요청자의 id(ask), 수락자의 id(accept), 요청자의 점수 ask_scr, 수락자의 점수 accept_scr, 승자의 이름, 패배자의 이름이 기록된다.
 + Online 탭에서는 swipe refresh layout을 사용하여 DB에서 유저를 받아온 후 게임 중인 유저는 아래로, 온라인인 유저는 위로 표시한다.
-+ Ranking 탭에서는 
++ Ranking 탭에서는 DB에서 모든 유저를 받아온 후 승리 수로 정렬하여 보여준다.
++ 게임 화면에서는 socket.io를 사용하여 실시간 게임 플레이를 구현했다. 
+  + 클릭한 position을 서버로 보내면 broadcast로 상대방에게 같은 정보를 보내고 서로 카드가 뒤집히는 것을 볼 수 있다.
+  + 세 개의 카드를 클릭하면 서버에서 evaluate 한 후 타켓 넘버와 비교하여 correct, wrong 중 하나를 양측에 보낸다.
+  + turn, round 의 시작과 끝에 대한 정보들을 client와 server가 실시간으로 주고받는다.
+  + 게임의 시작과 끝에는 userAccount schema, battle schema를 업데이트 한다.
